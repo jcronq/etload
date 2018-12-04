@@ -1,7 +1,7 @@
 {
-	"name": "state_machine",
+	"name": "etload",
 	"version": "1.0.0",
-	"description": "Generalized Backend for an Online Marketplace",
+	"description": "A wrapper for the ETL process to help make serverless and real resources available seamlessly.",
 	"main": "handler.ts",
 	"scripts": {
 		"ts-node": "ts-node --version",
@@ -12,9 +12,9 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://gitlab.com/jcronq/fantist-serverless-backend.git"
+		"url": "https://github.com/jcronq/etload.git"
 	},
-	"author": "",
+	"author": "Jason Cronquist",
 	"license": "ISC",
 	"devDependencies": {
 		"@types/chai": "^4.1.7",
