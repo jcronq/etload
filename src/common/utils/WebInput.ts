@@ -1,4 +1,4 @@
-import { Logger } from './Logger';
+import { Logger } from './logger';
 
 export const EnsureObject = (input: string | object): object => {
 	if (typeof input == 'string') {

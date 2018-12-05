@@ -1,3 +1,3 @@
-export * from './Logger';
-export * from './IDs';
-export * from './WebInput';
+export * from './logger';
+export * from './generateGUID';
+export * from './webInput';

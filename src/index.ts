@@ -1,1 +1,1 @@
-export * from './common';
+export { Trigger } from './triggers';
