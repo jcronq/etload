@@ -1,6 +1,7 @@
 import * as AWS from 'aws-sdk';
 import { Logger } from '../../common/utils';
 import { FS } from './fs';
+import { AWSError } from 'aws-sdk';
 
 const settings = { apiVersion: process.env.s3ApiVersion };
 
@@ -33,31 +34,55 @@ export class S3 implements FS {
 			throw invalidKeyMsg;
 		}
 		const bucket = splitKey[0];
-		const path: string = splitKey.slice(1, splitKey.length - 1).join('/');
+		const path: string = splitKey.slice(1).join('/');
 		return [bucket, path];
 	}
 
 	// Follow the pattern for key-naming convention.
 	// <bucket-name>/<path->/<-to->/<-file>/filename
 	// Or be an array with the bucket as the first variable.
-	public read(key: string | string[]) {
-		const [bucket, path] = this.getBucketAndPath(key);
-		Logger.info(`reading '${key}' from '${bucket}'`);
-		const params: ObjectParams = {
-			Bucket: bucket,
-			Key: path
-		};
-		return this.s3.getObject(params).promise();
+	public read(key: string | string[]): Promise<any> {
+		return new Promise((resolve, reject) => {
+			try {
+				const [bucket, path] = this.getBucketAndPath(key);
+				Logger.info(`reading '${key}' from '${bucket}'`);
+				const params: ObjectParams = {
+					Bucket: bucket,
+					Key: path
+				};
+				this.s3.getObject(
+					params,
+					(err: AWSError, data: AWS.S3.Types.GetObjectOutput) => {
+						if (err) reject(err);
+						else resolve(data.Body);
+					}
+				);
+			} catch (error) {
+				reject(error);
+			}
+		});
 	}
 
 	public write(key: string | string[], data: any): Promise<any> {
-		const [bucket, path] = this.getBucketAndPath(key);
-		Logger.info(`writing '${key}' to '${bucket}'`);
-		const params: ObjectParams = {
-			Bucket: bucket,
-			Key: path,
-			Body: data
-		};
-		return this.s3.putObject(params).promise();
+		return new Promise((resolve, reject) => {
+			try {
+				const [bucket, path] = this.getBucketAndPath(key);
+				Logger.info(`writing '${key}' to '${bucket}'`);
+				const params: ObjectParams = {
+					Bucket: bucket,
+					Key: path,
+					Body: data
+				};
+				this.s3.putObject(
+					params,
+					(err: AWSError, data: AWS.S3.Types.PutObjectOutput) => {
+						if (err) reject(err);
+						else resolve(true);
+					}
+				);
+			} catch (error) {
+				reject(error);
+			}
+		});
 	}
 }
