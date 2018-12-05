@@ -1,2 +1,2 @@
 export * from './database';
-export * from './dynamoDb';
+export * from './dynamo.db';

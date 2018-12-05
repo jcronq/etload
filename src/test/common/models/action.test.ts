@@ -1,7 +1,7 @@
 import { AddOne, ThrowsError, Sequence } from './testing.actions';
 import { expect, assert } from 'chai';
 
-describe('Action', () => {
+describe('Action Test', () => {
 	const addOne = new AddOne();
 	const throwsError = new ThrowsError();
 	const sequence = new Sequence();
@@ -12,7 +12,7 @@ describe('Action', () => {
 		expect(2).to.equal(oneAddOne);
 		expect(zeroToFour).eqls([0, 1, 2, 3, 4]);
 		try {
-			expect(async () => await throwsError.update(2)).to.throw();
+			await throwsError.update(2);
 			assert(false);
 		} catch (error) {
 			assert(true);

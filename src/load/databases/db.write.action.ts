@@ -1,7 +1,7 @@
 import { Database } from '../../resources/databases';
 import { Action } from '../../common';
 
-export class DbWriteAction<ChosenDatabase> implements Action {
+export class DbWriteAction implements Action {
 	get name(): string {
 		return `${this.db.name}.${this.tableName}-writer`;
 	}

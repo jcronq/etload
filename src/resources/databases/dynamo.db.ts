@@ -8,7 +8,7 @@ import {
 	KeySchemaElement,
 	AttributeDefinitions
 } from 'aws-sdk/clients/dynamodb';
-import { DynamoDB } from 'aws-sdk';
+import { DynamoDB, AWSError } from 'aws-sdk';
 
 const settings = {
 	apiVersion: process.env.dynamoDbApiVersion
@@ -27,11 +27,14 @@ export class DynamoDb implements Database {
 	documentClient: DynamoDB.DocumentClient;
 	dynamoDB: DynamoDB;
 
-	constructor() {
-		this.documentClient = new DynamoDB.DocumentClient(settings);
+	constructor(private region = 'us-east-1') {
+		this.documentClient = new DynamoDB.DocumentClient({
+			...settings,
+			region: this.region
+		});
 	}
 
-	public insert(table: string, item: any): Promise<any> {
+	public insert(table: string, item: any): Promise<boolean> {
 		const params: DynamoDbParams = {
 			TableName: table,
 			Item: {
@@ -41,17 +44,52 @@ export class DynamoDb implements Database {
 		};
 		return new Promise((resolve, reject) => {
 			Logger.info(`adding item`, params);
-			this.documentClient.put(params, (err: any, data: any) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(data);
-				}
-			});
+			try {
+				this.documentClient.put(
+					params,
+					(
+						err: AWSError,
+						data: DynamoDB.DocumentClient.PutItemOutput
+					) => {
+						if (err) {
+							reject(false);
+						} else {
+							// data.ConsumedCapacity can be used to determine total capacity of the db writer.
+							resolve(true);
+						}
+					}
+				);
+			} catch (error) {
+				reject(error);
+			}
 		});
 	}
 	public query(table: string, searchPattern: any): Promise<any> {
-		throw 'query has not yet been programmed.';
+		const params = {
+			TableName: table,
+			Key: searchPattern
+		};
+		return new Promise((resolve, reject) => {
+			this.documentClient.get(
+				params,
+				(
+					err: AWSError,
+					data: DynamoDB.DocumentClient.GetItemOutput
+				) => {
+					if (err) {
+						reject(
+							`Unable to read item: ${JSON.stringify(
+								err,
+								undefined,
+								2
+							)}`
+						);
+					} else {
+						resolve(data.Item);
+					}
+				}
+			);
+		});
 	}
 	public update(table: string, searchPattern: any, item: any): Promise<any> {
 		throw 'update has not yet been programmed.';
@@ -59,7 +97,10 @@ export class DynamoDb implements Database {
 
 	private initializeDbConnection() {
 		if (!this.dynamoDB) {
-			this.dynamoDB = new DynamoDB(settings);
+			this.dynamoDB = new DynamoDB({
+				...settings,
+				region: this.region
+			});
 		}
 	}
 
@@ -67,15 +108,19 @@ export class DynamoDb implements Database {
 		this.initializeDbConnection();
 		Logger.info('Requesting List of Tables: {}');
 		return new Promise(async (resolve, reject) => {
-			this.dynamoDB.listTables({}, (error, data) => {
-				if (error) {
-					Logger.error('DynamoDb.ListTables() failed');
-					reject(error);
-				} else {
-					Logger.info('Returned tables: ', data.TableNames);
-					resolve(data.TableNames);
-				}
-			});
+			try {
+				this.dynamoDB.listTables({}, (error, data) => {
+					if (error) {
+						Logger.error('DynamoDb.ListTables() failed');
+						reject(error);
+					} else {
+						Logger.info('Returned tables: ', data.TableNames);
+						resolve(data.TableNames);
+					}
+				});
+			} catch (error) {
+				reject(error);
+			}
 		});
 	}
 
@@ -100,35 +145,45 @@ export class DynamoDb implements Database {
 	}
 
 	public createTable(tableDefinition: any): Promise<any> {
+		this.initializeDbConnection();
 		const tableInput: CreateTableInput = tableDefinition as CreateTableInput;
 		Logger.info('Creating Table: ', tableInput);
 		return new Promise(async (resolve, reject) => {
-			this.dynamoDB.createTable(tableInput, (error, data) => {
-				if (error) {
-					Logger.error(error);
-					reject(error);
-				} else {
-					Logger.info('table Created', data);
-					resolve(data);
-				}
-			});
+			try {
+				this.dynamoDB.createTable(tableInput, (error, data) => {
+					if (error) {
+						Logger.error(error);
+						reject(error);
+					} else {
+						Logger.info('table Created', data);
+						resolve(data);
+					}
+				});
+			} catch (error) {
+				reject(error);
+			}
 		});
 	}
 
 	public deleteTable(tableName: string): Promise<any> {
+		this.initializeDbConnection();
 		return new Promise((resolve, reject) => {
 			const params: DeleteTableInput = {
 				TableName: tableName
 			};
-			this.dynamoDB.deleteTable(params, (error, data) => {
-				if (error) {
-					Logger.error(error);
-					reject(error);
-				} else {
-					Logger.info(data);
-					resolve(data);
-				}
-			});
+			try {
+				this.dynamoDB.deleteTable(params, (error, data) => {
+					if (error) {
+						Logger.error(error);
+						reject(error);
+					} else {
+						Logger.info(data);
+						resolve(data);
+					}
+				});
+			} catch (error) {
+				reject(error);
+			}
 		});
 	}
 
