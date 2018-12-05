@@ -6,12 +6,12 @@ export class FileWriteAction implements Action {
 		return `${this.filesystem.name}-FileWriteAction`;
 	}
 
-	constructor(public filesystem: FS, public filename: string) {}
-	update(data: any): Promise<any> {
+	constructor(public filesystem: FS) {}
+	update(input: any): Promise<any> {
 		return new Promise(async (resolve, reject) => {
 			try {
-				await this.filesystem.write(this.filename, data);
-				return data;
+				await this.filesystem.write(input.filename, input.data);
+				resolve(input);
 			} catch (error) {
 				reject(error);
 			}
