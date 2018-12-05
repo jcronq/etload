@@ -1,3 +1,3 @@
-import { Nameable } from 'src/common/models/nameable';
+import { Nameable } from '../common/models/nameable';
 
 export interface Resource extends Nameable {}

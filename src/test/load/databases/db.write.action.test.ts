@@ -13,6 +13,8 @@ describe('DbWriteAction Test', () => {
 	});
 
 	it('should actually write to the db', async () => {
+		expect(writeAction.name).to.equal(`${db.name}.${testTable}-writer`);
+
 		const testObj = { name: 'this is a test', value: 'a value' };
 		const writeActionResult = await writeAction.update(testObj);
 		console.log('writeActionResult: ', writeActionResult);
